@@ -1,46 +1,58 @@
 from __future__ import annotations
-from typing import Any,Self, Hashable, Sequence
 
-class Key:
+from typing import Any, Hashable, Sequence
+
+
+class Step:
     def __init__(self, key: Hashable):
         self.key = key
 
-    def __call__(self, state: dict | list | object):
-        if isinstance(state, dict):
-            return state.get(self.key)
-        elif isinstance(state, Sequence):
+    def __call__(self, state: dict | Sequence | object):
+        if isinstance(state, (dict, Sequence)):
             return state[self.key]
         else:
             return getattr(state, self.key)
 
-class DataWalk:
-    def __init__(self, data: dict):
-        self._data = data
-        self._path = []
+    def __repr__(self):
+        return f"Step({self.key})"
 
-    def __truediv__(self, key: Hashable) -> Self:
-        """
-        Handles key after key dict exploration
-        https://docs.python.org/3/reference/datamodel.html#object.__truediv__
+class MetaWalk(type):
+    def __truediv__(self, key: Hashable) -> Walk:
+        return Walk(key)
 
-        TODO: make class immutable
-        """
-        self._path.append(Key(key))
-        return self
-    
+_NO_DEFAULT = ()
+class Walk(metaclass=MetaWalk):
+    def __init__(self, *keys: Hashable):
+        self.steps = tuple(Step(key) for key in keys)
 
-    def get_value(self, *, default: Any = None) -> Any | None:
-        """
-        Walks the path and return the value.
-        TODO support:
-        - trace: bool -> associate the walk to each returned values (when handling filtering list or properties)
-        - raise_if_lost: bool -> raise an error () when failing to follow the data path
-        """
-        current_state = self._data
-        for step in self._path:
+    @staticmethod
+    def from_steps(*steps: Step):
+        walk = Walk()
+        walk.steps = steps
+        return walk
+
+    def __truediv__(self: Walk, key: Hashable|slice) -> Walk:
+        return Walk.from_steps(*self.steps, Step(key))
+
+    def walk(self, data: dict, /,*, default: Any = _NO_DEFAULT) -> Any:
+        current_state = data
+        passed_steps = []
+        for step in self.steps:
             try:
                 current_state = step(current_state)
-            except Exception:
-                return default
-        
+                passed_steps.append(step)
+            except Exception as error:
+                if default is _NO_DEFAULT:
+                    raise Exception(f"could not find {step} at {passed_steps} in {current_state}") from error
+                else:
+                    return default 
+
         return current_state
+
+if __name__ == "__main__":
+    walk_from_class = Walk / 'property'
+    walk_from_instance = Walk('property_1', 'property_2') / 'property_3'
+    select_friends = Walk / 'property' / slice(0, -1)
+    print(f"{walk_from_class.steps=}")
+    print(f"{walk_from_instance.steps=}")
+    print(f"{select_friends.steps=}")
