@@ -14,7 +14,18 @@ class Step:
             return getattr(state, self.key)
 
     def __repr__(self):
-        return f"Step({self.key})"
+        if isinstance(self.key, slice):
+            indices = [
+                str(index) if index is not None else ''
+                for index in (self.key.start, self.key.stop)
+            ]
+            if self.key.step is not None:
+                indices.append(str(self.key.step))
+            return f"[{':'.join(indices)}]"
+        elif isinstance(self.key, int):
+            return f'[{self.key}]'
+        else:
+            return f'.{self.key}'
 
 class MetaWalk(type):
     def __truediv__(self, key: Hashable) -> Walk:
@@ -43,16 +54,16 @@ class Walk(metaclass=MetaWalk):
                 passed_steps.append(step)
             except Exception as error:
                 if default is _NO_DEFAULT:
-                    raise Exception(f"could not find {step} at {passed_steps} in {current_state}") from error
+                    raise Exception(f'walked {passed_steps} but could not find {step} in {current_state}') from error
                 else:
                     return default 
 
         return current_state
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     walk_from_class = Walk / 'property'
     walk_from_instance = Walk('property_1', 'property_2') / 'property_3'
     select_friends = Walk / 'property' / slice(0, -1)
-    print(f"{walk_from_class.steps=}")
-    print(f"{walk_from_instance.steps=}")
-    print(f"{select_friends.steps=}")
+    print(f'{walk_from_class.steps=}')
+    print(f'{walk_from_instance.steps=}')
+    print(f'{select_friends.steps=}')

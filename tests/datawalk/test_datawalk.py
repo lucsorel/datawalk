@@ -1,8 +1,29 @@
 from datawalk import Walk
 
-from pytest import mark
+from pytest import mark, raises
 
+class Pet:
+    def __init__(self, name: str):
+        self.name = name
+
+data = {
+    'name': 'Suzie Q',
+    'org': {
+        'title': 'Datawalk',
+        'address': {'country': 'France'},
+        'phones': ['01 23 45 67 89', '02 13 46 58 79'],
+        (666, 'ev/l'): 'hashable key'
+    },
+    'friends': [
+        {'name': 'Frankie Manning'},
+        {'name': 'Harry Cover'},
+        {'name': 'Suzie Q'},
+        {'name': 'Jean Blasin'},
+    ],
+    'pets': [Pet('Cinnamon')]
+}
 org_walk = Walk('org')
+
 @mark.parametrize(
     ['walk', 'expected_value'],
     [
@@ -22,25 +43,14 @@ org_walk = Walk('org')
     ]
 )
 def test_walk_get_value(walk: Walk, expected_value):
-    class Pet:
-        def __init__(self, name: str):
-            self.name = name
-
-    data = {
-        'name': 'Suzie Q',
-        'org': {
-            'title': 'Datawalk',
-            'address': {'country': 'France'},
-            'phones': ['01 23 45 67 89', '02 13 46 58 79'],
-            (666, 'ev/l'): 'hashable key'
-        },
-        'friends': [
-            {'name': 'Frankie Manning'},
-            {'name': 'Harry Cover'},
-            {'name': 'Suzie Q'},
-            {'name': 'Jean Blasin'},
-        ],
-        'pets': [Pet('Cinnamon')]
-    }
     assert walk.walk(data) == expected_value
-    # assert (org_walk / 'phone').walk(data, default=None) is None
+
+def test_walk_invalid_path_without_default():
+    with raises(Exception) as error:
+        (org_walk  / 'phones' / 1 / 'phone').walk(data)
+    
+    assert str(error.value) == 'walked [.org, .phones, [1]] but could not find .phone in 02 13 46 58 79'
+
+def test_walk_invalid_path_with_default():
+    assert (org_walk  / 'phones' / 1 / 'phone').walk(data, default=None) is None
+    
