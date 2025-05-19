@@ -1,9 +1,21 @@
+"""
+Eases data retrieval in nested structures by providing a DSL based on the magic methods involved with arithmetic operators
+https://docs.python.org/3/reference/datamodel.html#emulating-numeric-types
+"""
+
 from __future__ import annotations
 
 from typing import Any, Hashable, Sequence
 
 
 class Step:
+    """
+    Returns the value associated with the given key:
+    - an index or a slice (start, stop, step) for a sequence
+    - a key for a dict
+    - an attribute name otherwise
+    """
+
     def __init__(self, key: Hashable):
         self.key = key
 

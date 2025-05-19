@@ -32,7 +32,7 @@ org_walk = Walk('org')
         (Walk('name'), 'Suzie Q'),
         (Walk('org', 'address') / 'country', 'France'),
         (org_walk / 'title', 'Datawalk'),
-        (org_walk / 'phones' / 1, '02 13 46 58 79'),
+        (Walk / 'org' / 'phones' / 1, '02 13 46 58 79'),
         (org_walk / (666, 'ev/l'), 'hashable key'),
         (Walk() / 'friends' / 0 / 'name', 'Frankie Manning'),
         (Walk() / 'pets' / 0 / 'name', 'Cinnamon'),
