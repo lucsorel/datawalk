@@ -25,7 +25,7 @@ class Step:
         else:
             return getattr(state, self.key)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if isinstance(self.key, slice):
             indices = [
                 str(index) if index is not None else ''
@@ -39,6 +39,33 @@ class Step:
         else:
             return f'.{self.key}'
 
+class OneItemSelector:
+    """
+    Selects the first item in a sequence whose given property equals the given value
+    """
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+    def __call__(self, state: Sequence):
+        if len(state) == 0:
+            return None
+
+        value_getter = self.dict_value_getter if isinstance(state[0], dict) else self.object_value_getter
+
+        return next(item for item in state if value_getter(item, self.key) == self.value)
+
+    def __repr__(self) -> str:
+        return f'.{self.key}=={self.value}'
+
+    @staticmethod
+    def dict_value_getter(state: dict, key: Any):
+        return state.get(key)
+
+    @staticmethod
+    def object_value_getter(state: object, key: Any):
+        return getattr(state, key, None)
+
 class MetaWalk(type):
     def __truediv__(self, key: Hashable) -> Walk:
         return Walk(key)
@@ -49,13 +76,21 @@ class Walk(metaclass=MetaWalk):
         self.steps = tuple(Step(key) for key in keys)
 
     @staticmethod
-    def from_steps(*steps: Step):
+    def from_steps(*steps: Step | OneItemSelector):
         walk = Walk()
         walk.steps = steps
         return walk
 
-    def __truediv__(self: Walk, key: Hashable|slice) -> Walk:
+    def __truediv__(self, key: Hashable | slice) -> Walk:
         return Walk.from_steps(*self.steps, Step(key))
+
+    def __mod__(self, filter):
+        match filter:
+            case key, value:
+                return Walk.from_steps(*self.steps, OneItemSelector(key, value))
+
+            case _:
+                raise ValueError(f'unsupported filter: {filter}')
 
     def walk(self, data: dict, /,*, default: Any = _NO_DEFAULT) -> Any:
         current_state = data
@@ -75,7 +110,9 @@ class Walk(metaclass=MetaWalk):
 if __name__ == '__main__':
     walk_from_class = Walk / 'property'
     walk_from_instance = Walk('property_1', 'property_2') / 'property_3'
-    select_friends = Walk / 'property' / slice(0, -1)
+    select_items = Walk / 'property' / slice(0, -1)
+    filter_item = Walk / 'property' % ('key', 'value')
     print(f'{walk_from_class.steps=}')
     print(f'{walk_from_instance.steps=}')
-    print(f'{select_friends.steps=}')
+    print(f'{select_items.steps=}')
+    print(f'{filter_item.steps=}')
