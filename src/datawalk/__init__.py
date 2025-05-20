@@ -1,6 +1,7 @@
 """
 Eases data retrieval in nested structures by providing a DSL based on the magic methods involved with arithmetic operators
-https://docs.python.org/3/reference/datamodel.html#emulating-numeric-types
+- operators and magic methods: https://docs.python.org/3/reference/datamodel.html#emulating-numeric-types
+- operator precedence: https://docs.python.org/3/reference/expressions.html#operator-precedence
 """
 
 from __future__ import annotations
