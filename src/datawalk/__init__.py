@@ -6,114 +6,87 @@ Eases data retrieval in nested structures by providing a DSL based on the magic 
 
 from __future__ import annotations
 
-from typing import Any, Hashable, Sequence
+from typing import Any, Hashable, Protocol, Sequence
+
+from datawalk.errors import SelectorError, WalkError
+from datawalk.filters.all import All
+from datawalk.filters.first import First
+from datawalk.selectors.by_key import ByKey
+from datawalk.selectors.by_slice import BySlice
 
 
-class Step:
-    """
-    Returns the value associated with the given key:
-    - an index or a slice (start, stop, step) for a sequence
-    - a key for a dict
-    - an attribute name otherwise
-    """
+class Selector(Protocol):
+    def __call__(self, state: Any) -> Any: ...
 
-    def __init__(self, key: Hashable):
-        self.key = key
-
-    def __call__(self, state: dict | Sequence | object):
-        if isinstance(state, (dict, Sequence)):
-            return state[self.key]
-        else:
-            return getattr(state, self.key)
-
-    def __repr__(self) -> str:
-        if isinstance(self.key, slice):
-            indices = [
-                str(index) if index is not None else ''
-                for index in (self.key.start, self.key.stop)
-            ]
-            if self.key.step is not None:
-                indices.append(str(self.key.step))
-            return f"[{':'.join(indices)}]"
-        elif isinstance(self.key, int):
-            return f'[{self.key}]'
-        else:
-            return f'.{self.key}'
-
-class OneItemSelector:
-    """
-    Selects the first item in a sequence whose given property equals the given value
-    """
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-
-    def __call__(self, state: Sequence):
-        if len(state) == 0:
-            return None
-
-        value_getter = self.dict_value_getter if isinstance(state[0], dict) else self.object_value_getter
-
-        return next(item for item in state if value_getter(item, self.key) == self.value)
-
-    def __repr__(self) -> str:
-        return f'.{self.key}=={self.value}'
-
-    @staticmethod
-    def dict_value_getter(state: dict, key: Any):
-        return state.get(key)
-
-    @staticmethod
-    def object_value_getter(state: object, key: Any):
-        return getattr(state, key, None)
 
 class MetaWalk(type):
-    def __truediv__(self, key: Hashable) -> Walk:
-        return Walk(key)
+    def __truediv__(cls, step: Hashable) -> Walk:
+        return Walk(Walk.build_selector(step))
 
-_NO_DEFAULT = ()
+
+# flag used when walking a data structure without a default value
+_NO_DEFAULT = object()
+
+
 class Walk(metaclass=MetaWalk):
-    def __init__(self, *keys: Hashable):
-        self.steps = tuple(Step(key) for key in keys)
+    def __init__(self, *selectors: Selector):
+        """
+        Should only be used internally
+        """
+        self.selectors = tuple(selectors)
 
     @staticmethod
-    def from_steps(*steps: Step | OneItemSelector):
-        walk = Walk()
-        walk.steps = steps
-        return walk
+    def build_selector(step: Hashable | slice) -> Selector:
+        if isinstance(step, slice):
+            return BySlice(step)
+        else:
+            return ByKey(step)
 
-    def __truediv__(self, key: Hashable | slice) -> Walk:
-        return Walk.from_steps(*self.steps, Step(key))
+    def __truediv__(self, step: Hashable | slice) -> Walk:
+        return Walk(*self.selectors, Walk.build_selector(step))
 
-    def __mod__(self, filter):
+    def __matmul__(self, filter: Sequence[Hashable, Hashable]) -> Any:
+        """
+        In a sequence, selects the first entry whose key has the given value
+        """
         match filter:
-            case key, value:
-                return Walk.from_steps(*self.steps, OneItemSelector(key, value))
+            case [key, value]:
+                return Walk(*self.selectors, First(key, value))
 
             case _:
-                raise ValueError(f'unsupported filter: {filter}')
+                raise SelectorError(f'unsupported filter: {filter}')
 
-    def walk(self, data: dict, /,*, default: Any = _NO_DEFAULT) -> Any:
+    def __mod__(self, filter: Sequence[Hashable, Sequence]):
+        """
+        In a sequence, selects the entries whose key has a value in the given sequence
+        """
+        match filter:
+            case [key, [*values]]:
+                return Walk(*self.selectors, All(key, values))
+
+            case [key, value]:
+                raise SelectorError(f'unsupported filter: {filter}, value {value} must be a sequence')
+
+            case _:
+                raise SelectorError(f'unsupported filter: {filter}')
+
+    def walk(self, data: dict, /, *, default: Any = _NO_DEFAULT) -> Any:
         current_state = data
-        passed_steps = []
-        for step in self.steps:
+        passed_selectors = []
+        for selector in self.selectors:
             try:
-                current_state = step(current_state)
-                passed_steps.append(step)
+                current_state = selector(current_state)
+                passed_selectors.append(selector)
             except Exception as error:
                 if default is _NO_DEFAULT:
-                    raise Exception(f'walked {passed_steps} but could not find {step} in {current_state}') from error
+                    raise WalkError(
+                        f'walked {passed_selectors} but could not find {selector} in {current_state}',
+                        data_state=current_state,
+                    ) from error
                 else:
-                    return default 
+                    return default
 
         return current_state
 
-if __name__ == '__main__':
-    walk_from_class = Walk / 'property'
-    walk_from_instance = Walk('property_1', 'property_2') / 'property_3'
-    select_items = Walk / 'property' / slice(0, -1)
-    filter_item = Walk / 'property' % ('key', 'value')
-    print(f'{walk_from_class.steps=}')
-    print(f'{walk_from_instance.steps=}')
-    print(f'{select_items.steps=}')
-    print(f'{filter_item.steps=}')
+    def __repr__(self) -> str:
+        return ' '.join(f'{selector}' for selector in self.selectors)
