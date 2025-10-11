@@ -12,8 +12,6 @@ class BySlice:
     def __call__(self, state: Sequence) -> Sequence:
         """
         Apply the specified slice on the given sequence state
-
-        TODO: test with namedtuple
         """
         return state[self.slicer]
 

@@ -16,17 +16,18 @@ class ByKey:
         """
         Retrieves the value associated with the expected key in the given state.
 
-        TODO: test with namedtuple
-
         Raises:
-            AttributeError: when the state object has no attribute with the given name (self.key)
+            AttributeError: when the state object has no attribute of the given name (self.key)
             KeyError: (LookupError) when the state dict does not have the given key (self.key)
             IndexError: (LookupError) when the state dict does not have the given key (self.key)
         """
-        if isinstance(state, (dict, Sequence)):
-            return state[self.key]
-        else:
-            return getattr(state, self.key)
+        match self.key, state:
+            case int(), _:
+                return state[self.key]
+            case _, {self.key: value}:
+                return value
+            case _, _:
+                return getattr(state, self.key)
 
     def __repr__(self) -> str:
         if isinstance(self.key, int):
