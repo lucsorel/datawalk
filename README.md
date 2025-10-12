@@ -86,9 +86,13 @@ from datawalk import Walk
 
 name_walk = Walk / 'name'
 name_walk.walk(data) # -> 'Lucie Nation'
-# variations:
+# variations (the | pipe operator calls the .walk() method):
 name_walk | data     # -> 'Lucie Nation'
 Walk / 'name' | data # -> 'Lucie Nation'
+
+# use default value when failing to retrieve a value (with the ^ operator)
+(Walk / 'lastname').walk(data, default=None) # -> None
+Walk / 'lastname' ^ (data, None)             # -> None
 
 # organisation country
 Walk / 'org' / 'address' / 'country' | data # -> 'France'
