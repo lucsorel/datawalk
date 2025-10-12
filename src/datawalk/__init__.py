@@ -1,6 +1,6 @@
 """
 Eases data retrieval in nested structures by providing a DSL based on the magic methods involved with arithmetic operators
-- operators and magic methods: https://docs.python.org/3/reference/datamodel.html#emulating-numeric-types
+- operators and special methods: https://docs.python.org/3/reference/datamodel.html#emulating-numeric-types
 - operator precedence: https://docs.python.org/3/reference/expressions.html#operator-precedence
 """
 
@@ -71,8 +71,14 @@ class Walk(metaclass=MetaWalk):
         >>> walk / 'name'         # dict key or argument name
         >>> walk / 0              # sequence index
         >>> walk / slice(1,-1, 2) # applies the [1, -1, 2] slice on the sequence
+
+        Special case: passing an ellipsis returns a walk without the last selector
+        >>> walk / 'key' / ...    # returns a walk without the 'key' selector
         """
-        return Walk(*self.selectors, Walk.build_selector(step))
+        if step is Ellipsis:
+            return Walk(*self.selectors[:-1])
+        else:
+            return Walk(*self.selectors, Walk.build_selector(step))
 
     def __matmul__(self, filter: Sequence[Hashable, Hashable]) -> Any:
         """

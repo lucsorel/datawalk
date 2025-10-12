@@ -42,7 +42,7 @@ def pets():
 @fixture(scope='session')
 def data() -> dict:
     return {
-        'name': 'Suzie Q',
+        'name': 'Lucie Nation',
         'org': {
             'title': 'Datawalk',
             'address': {'country': 'France'},
@@ -89,8 +89,8 @@ def test_walks_are_immutable_when_combining_walks():
 @mark.parametrize(
     ['walk', 'expected_value'],
     [
-        (Walk() / 'name', 'Suzie Q'),
-        (Walk / 'name', 'Suzie Q'),
+        (Walk() / 'name', 'Lucie Nation'),
+        (Walk / 'name', 'Lucie Nation'),
         (Walk / 'org' / 'address' / 'country', 'France'),
         (Walk / 'org' / 'title', 'Datawalk'),
         (Walk / 'org' / 'phones' / 1, '02 13 46 58 79'),
@@ -105,6 +105,21 @@ def test_walks_are_immutable_when_combining_walks():
 )
 def test_walk_get_value(data: dict, walk: Walk, expected_value):
     assert walk.walk(data) == expected_value
+
+
+def test_walk_with_ellipsis(data: dict):
+    suzie_name_walk = Walk / 'friends' @ ('name', 'Suzie Q') / 'name'
+    suzie_name_walk_repr = repr(suzie_name_walk)
+    assert suzie_name_walk_repr == '.friends @(name==Suzie Q) .name'
+    assert suzie_name_walk | data == 'Suzie Q'
+
+    suzie_phone_walk = suzie_name_walk / ... / 'phone'
+    assert repr(suzie_phone_walk) == '.friends @(name==Suzie Q) .phone'
+    assert suzie_phone_walk | data == '06 43 15 27 98'
+
+    assert repr(suzie_name_walk) == suzie_name_walk_repr, (
+        'using an ellipsis does not modify a walk, it creates a new walk'
+    )
 
 
 def test_walk_invalid_selector():
