@@ -137,6 +137,10 @@ def test_walk_invalid_selector():
             'walked [.org, .phones, [1]] but could not find .phone in 02 13 46 58 79',
         ),
         (
+            Walk / 'friends' @ ('name', 'Suzie Q') / 'phone_number',
+            "walked [.friends, @(name==Suzie Q)] but could not find .phone_number in {'name': 'Suzie Q', 'phone': '06 43 15 27 98'}",
+        ),
+        (
             Walk / 'pets' @ ('name', 'Vanilla') / 'name',
             "walked [.pets] but could not find @(name==Vanilla) in (Pet(name=Cinnamon, type=cat), PetDataclass(name='Caramel', type='dog'), Pet(name=Melody, type=bird), PetNamedTuple(name='Socks', type='cat'))",
         ),
