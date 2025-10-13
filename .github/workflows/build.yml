@@ -1,0 +1,32 @@
+name: build
+
+on: [push]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MIN_CODE_COVERAGE_PERCENT: 85
+
+jobs:
+  test:
+    permissions:
+      actions: read
+      contents: read
+      # # rights required by moonrepo/run-report-action@v1 to write the CI report
+      # pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: project checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: proto and moon setup
+        uses: moonrepo/setup-toolchain@v0
+        with:
+          auto-install: true
+
+      - name: test
+        run: uv run pytest -v --cov=datawalk --cov-branch --cov-report term-missing --cov-fail-under $MIN_CODE_COVERAGE_PERCENT
