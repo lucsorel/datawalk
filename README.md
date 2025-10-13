@@ -28,11 +28,11 @@ Jump to the Use-cases section to see it in action.
 Install `datawalk` with your favorite Python package manager:
 
 ```sh
-pip install datawalk
+pip install git+https://github.com/lucsorel/datawalk.git#egg=datawalk
 
-uv add datawalk
+uv add "datawalk @ git+https://github.com/lucsorel/datawalk"
 
-poetry add datawalk
+poetry add git+https://github.com/lucsorel/datawalk.git
 
 # etc.
 ```
@@ -152,6 +152,11 @@ Code coverage (with [missed branch statements](https://pytest-cov.readthedocs.io
 ```sh
 uv run pytest -v --cov=datawalk --cov-branch --cov-report term-missing --cov-fail-under 85
 ```
+
+# Changelog
+
+* `0.1.1`: docs: install from github until publication on PyPI
+* `0.1.0`: first release
 
 # Licence
 
