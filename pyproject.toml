@@ -19,6 +19,9 @@ lint = [
     "pre-commit>=4.3.0",
 ]
 
+[tool.uv]
+default-groups = ["dev", "lint"]
+
 [tool.pytest.ini_options]
 console_output_style = "count"
 
