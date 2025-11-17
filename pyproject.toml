@@ -75,6 +75,7 @@ forced-separate = ["tests"]
 
 [tool.semantic_release]
 assets = []
+version_toml = ["pyproject.toml:project.version"]
 build_command = """
     python -m pip install uv
     uv lock --upgrade-package "$PACKAGE_NAME"
