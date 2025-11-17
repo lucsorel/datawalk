@@ -130,27 +130,39 @@ def test_walk_invalid_selector():
 
 
 @mark.parametrize(
-    ['invalid_walk', 'expected_error_message'],
+    ['invalid_walk', 'expected_error_message', 'current_data_state'],
     [
         (
             Walk / 'org' / 'phones' / 1 / 'phone',
-            'walked [.org, .phones, [1]] but could not find .phone in 02 13 46 58 79',
+            'walked [.org, .phones, [1]] but could not find .phone in the current data state',
+            '02 13 46 58 79',
         ),
         (
             Walk / 'friends' @ ('name', 'Suzie Q') / 'phone_number',
-            "walked [.friends, @(name==Suzie Q)] but could not find .phone_number in {'name': 'Suzie Q', 'phone': '06 43 15 27 98'}",
+            'walked [.friends, @(name==Suzie Q)] but could not find .phone_number in the current data state',
+            {'name': 'Suzie Q', 'phone': '06 43 15 27 98'},
         ),
         (
             Walk / 'pets' @ ('name', 'Vanilla') / 'name',
-            "walked [.pets] but could not find @(name==Vanilla) in (Pet(name=Cinnamon, type=cat), PetDataclass(name='Caramel', type='dog'), Pet(name=Melody, type=bird), PetNamedTuple(name='Socks', type='cat'))",
+            'walked [.pets] but could not find @(name==Vanilla) in the current data state',
+            (
+                Pet(name='Cinnamon', type='cat'),
+                PetDataclass(name='Caramel', type='dog'),
+                Pet(name='Melody', type='bird'),
+                PetNamedTuple(name='Socks', type='cat'),
+            ),
         ),
     ],
 )
-def test_walk_invalid_path_without_default(data: dict, invalid_walk: Walk, expected_error_message: str):
+def test_walk_invalid_path_without_default(
+    data: dict, invalid_walk: Walk, expected_error_message: str, current_data_state
+):
     with raises(WalkError) as error:
         invalid_walk.walk(data)
 
-    assert str(error.value) == expected_error_message
+    walk_error: WalkError = error.value
+    assert str(walk_error) == expected_error_message
+    assert walk_error.data_state == current_data_state
 
 
 @mark.parametrize(
