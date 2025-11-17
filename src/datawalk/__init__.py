@@ -96,7 +96,7 @@ class Walk(metaclass=MetaWalk):
     def __mod__(self, filter: Sequence[Hashable, Sequence]):
         """
         In a sequence, selects the entries whose key has a value in the given sequence
-        >>> walk % (key, value)
+        >>> walk % (key, [values])
         """
 
         match filter:
@@ -157,7 +157,7 @@ class Walk(metaclass=MetaWalk):
             except Exception as error:
                 if default is Walk._NO_DEFAULT:
                     raise WalkError(
-                        f'walked {passed_selectors} but could not find {selector} in {current_state}',
+                        f'walked {passed_selectors} but could not find {selector} in the current data state',
                         data_state=current_state,
                     ) from error
                 else:
