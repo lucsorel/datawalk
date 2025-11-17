@@ -1,6 +1,8 @@
-name: build
+name: test
 
-on: [push]
+on:
+  push:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
