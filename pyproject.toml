@@ -4,11 +4,29 @@ version = "0.2.0"
 description = "Fetch values from nested data structures"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+keywords = ["datawalk", "data structure", "value retrieval"]
+# https://pypi.org/classifiers/
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Free Threading",
+    "Topic :: Software Development",
+]
 dependencies = []
 
-[build-system]
-requires = ["uv_build>=0.9.0,<0.10.0"]
-build-backend = "uv_build"
+[project.urls]
+Homepage = "https://github.com/lucsorel/datawalk"
+Repository = "https://github.com/lucsorel/datawalk.git"
+Issues = "https://github.com/lucsorel/datawalk/issues"
+Changelog = "https://github.com/lucsorel/datawalk/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
@@ -24,6 +42,10 @@ release = [
 
 [tool.uv]
 default-groups = ["dev", "lint"]
+
+[build-system]
+requires = ["uv_build>=0.9.0,<0.10.0"]
+build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 console_output_style = "count"
