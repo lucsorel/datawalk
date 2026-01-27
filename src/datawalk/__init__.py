@@ -9,10 +9,10 @@ from __future__ import annotations
 from typing import Any, Hashable, Protocol, Sequence
 
 from datawalk.errors import SelectorError, WalkError
-from datawalk.filters.all import All
-from datawalk.filters.first import First
+from datawalk.selectors.all import All
 from datawalk.selectors.by_key import ByKey
 from datawalk.selectors.by_slice import BySlice
+from datawalk.selectors.first import First
 
 
 class Selector(Protocol):
