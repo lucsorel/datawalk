@@ -126,10 +126,15 @@ suzie_phone_walk = suzie_name_walk / ... / 'phone'
 suzie_name_walk | data  # -> 'Suzie Q'
 suzie_phone_walk | data # -> '06 43 15 27 98'
 
+# pick key:value items into a new dict
+short_address_walk = Walk / 'org' / 'address' // ('city', 'zipcode')
+short_address_walk | data # -> {'city': 'Rennes', 'zipcode': '35700'}
+
 # walk representations are concise and expressive
 repr(suzie_phone_walk)         # -> '.friends @(name==Suzie Q) .phone'
-repr(org_walk / 'phones' / 1) # -> '.org .phones [1]'
-repr(Walk / 'pets' / % ('name', ['Melody', 'Socks'])) # -> ".pets %(name in ['Melody', 'Socks']"
+repr(org_walk / 'phones' / 1)  # -> '.org .phones [1]'
+repr(short_address_walk)       # -> '.org .address {city,zipcode}'
+repr(Walk / 'pets' % ('name', ['Melody', 'Socks'])) # -> ".pets %(name in ['Melody', 'Socks'])"
 ```
 
 Datawalk helps you fix your walks with explicit error messages:

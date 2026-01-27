@@ -1,6 +1,6 @@
 from typing import Hashable, Iterable, Sequence
 
-from datawalk.filters import value_getter
+from datawalk.selectors import value_getter
 
 
 class All:
