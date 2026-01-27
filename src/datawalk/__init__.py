@@ -13,6 +13,7 @@ from datawalk.selectors.all import All
 from datawalk.selectors.by_key import ByKey
 from datawalk.selectors.by_slice import BySlice
 from datawalk.selectors.first import First
+from datawalk.selectors.picker import Picker
 
 
 class Selector(Protocol):
@@ -24,7 +25,8 @@ class MetaWalk(type):
     Allows to create a Walk instance by applying the selector operators directly on the Walk class
     >>> Walk / 'key'
     >>> Walk @ ('key', value)
-    >>> Walk % ('key', value)
+    >>> Walk % ('key', values)
+    >>> Walk // ('attr_1', 'attr_2')
     """
 
     def __truediv__(cls, step: Hashable) -> Walk:
@@ -35,6 +37,9 @@ class MetaWalk(type):
 
     def __mod__(cls, filter: Sequence[Hashable, Sequence]):
         return Walk() % filter
+
+    def __floordiv__(cls, pickers: Sequence[Hashable]) -> dict:
+        return Walk(Picker(pickers))
 
 
 class Walk(metaclass=MetaWalk):
@@ -75,10 +80,25 @@ class Walk(metaclass=MetaWalk):
         Special case: passing an ellipsis returns a walk without the last selector
         >>> walk / 'key' / ...    # returns a walk without the 'key' selector
         """
+
         if step is Ellipsis:
             return Walk(*self.selectors[:-1])
         else:
             return Walk(*self.selectors, Walk.build_selector(step))
+
+    def __floordiv__(self, pickers: Sequence[Hashable]) -> dict:
+        """
+        Picks the properties from a data structure and outputs them into a dictionary.
+
+        The key:value pairs are extracted with the ByKey selector, which works on objects, dictionaries and sequences.
+
+        >>> full_contact = {'firstname': 'Suzie, 'lastname': 'Q', 'address': {...}}
+        >>> firstname_and_lastname_walk = Walk // ('firstname', 'lastname')
+        >>> short_contact = firstname_and_lastname_walk | full_contact
+        >>> # -> {'firstname': 'Suzie, 'lastname': 'Q'}
+        """
+
+        return Walk(*self.selectors, Picker(pickers))
 
     def __matmul__(self, filter: Sequence[Hashable, Hashable]) -> Any:
         """

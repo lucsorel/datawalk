@@ -45,7 +45,7 @@ def data() -> dict:
         'name': 'Lucie Nation',
         'org': {
             'title': 'Datawalk',
-            'address': {'country': 'France'},
+            'address': {'country': 'France', 'city': 'Rennes', 'zipcode': '35700'},
             'phones': ['01 23 45 67 89', '02 13 46 58 79'],
             (666, 'ev/l'): 'hashable key',
         },
@@ -92,10 +92,12 @@ def test_walks_are_immutable_when_combining_walks():
         (Walk() / 'name', 'Lucie Nation'),
         (Walk / 'name', 'Lucie Nation'),
         (Walk / 'org' / 'address' / 'country', 'France'),
+        (Walk / 'org' / 'address' // ('city', 'zipcode'), {'city': 'Rennes', 'zipcode': '35700'}),
         (Walk / 'org' / 'title', 'Datawalk'),
         (Walk / 'org' / 'phones' / 1, '02 13 46 58 79'),
         (Walk / 'org' / (666, 'ev/l'), 'hashable key'),
         (Walk / 'friends' / 0 / 'name', 'Frankie Manning'),
+        (Walk / 'friends' // (0, 3), {0: {'name': 'Frankie Manning'}, 3: {'name': 'Jean Blasin'}}),
         (Walk / 'pets' / 0 / 'name', 'Cinnamon'),
         (
             Walk / 'friends' / slice(1, -1),
@@ -196,6 +198,17 @@ def test_walk_with_filter(data: dict, walk: Walk, expected_value: Any):
     assert walk.walk(data) == expected_value
 
 
+@mark.parametrize(
+    ['walk', 'expected_repr'],
+    [
+        (Walk / 'org' / 'address' // ('city', 'zipcode'), '.org .address {city,zipcode}'),
+        (Walk / 'pets' % ('name', ['Melody', 'Socks']), ".pets %(name in ['Melody', 'Socks'])"),
+    ],
+)
+def test_walk_repr(walk, expected_repr):
+    assert repr(walk) == expected_repr
+
+
 def test_walk_with_operators(data: dict):
     assert Walk / 'pets' @ ('name', 'Cinnamon') / 'name' | data == 'Cinnamon'
     assert Walk / 'pets' @ ('name', 'Cinnamon') + Walk / 'name' | data == 'Cinnamon'
@@ -203,3 +216,5 @@ def test_walk_with_operators(data: dict):
     # walks on list
     assert Walk @ ('name', 'Cinnamon') + Walk / 'name' | data['pets'] == 'Cinnamon'
     assert Walk % ('type', ['dog']) / 0 / 'name' | data['pets'] == 'Caramel'
+    # pick key:value items
+    assert Walk // ('name', 'pets') | data == {'name': 'Lucie Nation', 'pets': (cinnamon, caramel, melody, socks)}
