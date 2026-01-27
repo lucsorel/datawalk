@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.3.0 (2026-01-27)
+
+### Features
+
+- **selectors**: Add // ('attr_1', 'attr_2') operator to pick key:value items and output a dict
+  ([`15b1e5a`](https://github.com/lucsorel/datawalk/commit/15b1e5a78189c609cb82dad2546e4ab063d32be4))
+
+
 ## v0.2.0 (2025-11-17)
 
 ### Build System
