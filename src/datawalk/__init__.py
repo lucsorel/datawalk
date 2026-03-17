@@ -15,6 +15,8 @@ from datawalk.selectors.by_slice import BySlice
 from datawalk.selectors.first import First
 from datawalk.selectors.picker import Picker
 
+__version__ = '0.3.0'
+
 
 class Selector(Protocol):
     def __call__(self, state: Any) -> Any: ...
@@ -27,6 +29,7 @@ class MetaWalk(type):
     >>> Walk @ ('key', value)
     >>> Walk % ('key', values)
     >>> Walk // ('attr_1', 'attr_2')
+    >>> Walk * StateProcessor()
     """
 
     def __truediv__(cls, step: Hashable) -> Walk:
@@ -40,6 +43,12 @@ class MetaWalk(type):
 
     def __floordiv__(cls, pickers: Sequence[Hashable]) -> dict:
         return Walk(Picker(pickers))
+
+    def __mul__(cls, selector: Selector):
+        """
+        Creates a new walk appending the given custom selector
+        """
+        return Walk(selector)
 
 
 class Walk(metaclass=MetaWalk):
@@ -128,6 +137,14 @@ class Walk(metaclass=MetaWalk):
 
             case _:
                 raise SelectorError(f'unsupported filter: {filter}')
+
+    def __mul__(self, selector: Selector):
+        """
+        Creates a new walk appending the given custom selector
+        >>> walk * StateProcessor()
+        """
+
+        return Walk(*self.selectors, selector)
 
     def __add__(self, other_walk) -> Walk:
         """
