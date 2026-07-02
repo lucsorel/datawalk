@@ -1,4 +1,4 @@
-name: test
+name: code-quality
 
 on:
   push:
@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  MIN_CODE_COVERAGE_PERCENT: 85
+  MIN_CODE_COVERAGE_PERCENT: 99
 
 jobs:
   test:

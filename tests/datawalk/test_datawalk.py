@@ -1,46 +1,15 @@
-from dataclasses import dataclass
-from typing import Any, NamedTuple
+from typing import Any
 
 from pytest import fixture, mark, raises
 
 from datawalk import Walk
 from datawalk.errors import SelectorError, WalkError
 
-
-class Pet:
-    def __init__(self, name: str, type: str):
-        self.name = name
-        self.type = type
-
-    def __repr__(self) -> str:
-        return f'Pet(name={self.name}, type={self.type})'
-
-    def __eq__(self, other) -> str:
-        return other is not None and isinstance(other, Pet) and other.name == self.name and other.type == self.type
+from tests.conftest import Pet, PetDataclass, PetNamedTuple
 
 
-@dataclass
-class PetDataclass:
-    name: str
-    type: str
-
-
-class PetNamedTuple(NamedTuple):
-    name: str
-    type: str
-
-
-def pets():
-    return (
-        Pet('Cinnamon', 'cat'),
-        PetDataclass('Caramel', 'dog'),
-        Pet('Melody', 'bird'),
-        PetNamedTuple('Socks', 'cat'),
-    )
-
-
-@fixture(scope='session')
-def data() -> dict:
+@fixture
+def data(pets) -> dict:
     return {
         'name': 'Lucie Nation',
         'org': {
@@ -55,7 +24,7 @@ def data() -> dict:
             {'name': 'Suzie Q', 'phone': '06 43 15 27 98'},
             {'name': 'Jean Blasin'},
         ],
-        'pets': pets(),
+        'pets': pets,
     }
 
 
@@ -179,23 +148,40 @@ def test_walk_invalid_path_with_default(data: dict, invalid_walk: Walk):
     assert invalid_walk.walk(data, default=None) is None
 
 
-cinnamon, caramel, melody, socks = pets()
-
-
 @mark.parametrize(
     ['walk', 'expected_value'],
     [
         (Walk / 'friends' @ ('name', 'Suzie Q') / 'phone', '06 43 15 27 98'),
         (Walk / 'pets' @ ('name', 'Caramel') / 'name', 'Caramel'),
-        (Walk / 'pets' @ ('name', 'Cinnamon'), cinnamon),
-        (Walk / 'pets' % ('name', ['Cinnamon', 'Melody']), [cinnamon, melody]),
-        (Walk / 'pets' % ('type', ['cat']), [cinnamon, socks]),
+        (Walk / 'pets' @ ('name', 'Cinnamon') / 'type', 'cat'),
+        (Walk / 'pets' % ('type', ['cat']) / 0 / 'name', 'Cinnamon'),
         (Walk / 'pets' % ('type', ['cat']) / 1 / 'name', 'Socks'),
-        (Walk / 'pets' % ('type', ['dog']), [caramel]),
+        (Walk / 'pets' % ('type', ['dog']) / 0 / 'name', 'Caramel'),
     ],
 )
 def test_walk_with_filter(data: dict, walk: Walk, expected_value: Any):
     assert walk.walk(data) == expected_value
+
+
+def test_walk_with_invalid_filter_first():
+    with raises(SelectorError) as selector_error:
+        Walk @ ('key_without_value')
+
+    assert str(selector_error.value) == 'unsupported filter: key_without_value'
+
+
+def test_walk_with_invalid_filter_all():
+    with raises(SelectorError) as selector_error:
+        Walk % ('key_without_values')
+
+    assert str(selector_error.value) == 'unsupported filter: key_without_values'
+
+
+def test_walk_with_invalid_concatenation():
+    with raises(TypeError) as type_error:
+        (Walk / 'friends' / 0) + 'name'
+
+    assert str(type_error.value) == "unsupported operand type(s) for +: 'Walk' and 'str'"
 
 
 @mark.parametrize(
@@ -209,12 +195,12 @@ def test_walk_repr(walk, expected_repr):
     assert repr(walk) == expected_repr
 
 
-def test_walk_with_operators(data: dict):
+def test_walk_with_operators(data: dict, pets):
     assert Walk / 'pets' @ ('name', 'Cinnamon') / 'name' | data == 'Cinnamon'
     assert Walk / 'pets' @ ('name', 'Cinnamon') + Walk / 'name' | data == 'Cinnamon'
     assert Walk / 'pets' @ ('name', 'Raspberry') / 'name' ^ (data, '☹️ no Raspberry') == '☹️ no Raspberry'
     # walks on list
-    assert Walk @ ('name', 'Cinnamon') + Walk / 'name' | data['pets'] == 'Cinnamon'
-    assert Walk % ('type', ['dog']) / 0 / 'name' | data['pets'] == 'Caramel'
+    assert Walk @ ('name', 'Cinnamon') + Walk / 'name' | pets == 'Cinnamon'
+    assert Walk % ('type', ['dog']) / 0 / 'name' | pets == 'Caramel'
     # pick key:value items
-    assert Walk // ('name', 'pets') | data == {'name': 'Lucie Nation', 'pets': (cinnamon, caramel, melody, socks)}
+    assert Walk // ('name', 'pets') | data == {'name': 'Lucie Nation', 'pets': pets}
