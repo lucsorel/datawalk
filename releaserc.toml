@@ -14,7 +14,8 @@ tag_format = "{version}"
 add_partial_tags = false
 
 [semantic_release.branches.main]
-match = "(main|support-custom-selector)"
+# match = "(main|custom-branch)"
+match = "main"
 prerelease_token = "rc"
 prerelease = false
 
