@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.4.0 (2026-08-09)
+
+### Features
+
+- **selectors**: Support * operator to apply a custom selector
+  ([`9ad1e25`](https://github.com/lucsorel/datawalk/commit/9ad1e25675acc4dbf426c253bf5e1df1011e615e))
+
+
 ## v0.3.0 (2026-01-27)
 
 ### Features

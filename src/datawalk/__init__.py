@@ -15,7 +15,7 @@ from datawalk.selectors.by_slice import BySlice
 from datawalk.selectors.first import First
 from datawalk.selectors.picker import Picker
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 
 
 class Selector(Protocol):
