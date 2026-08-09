@@ -10,7 +10,7 @@ class WalkError(LookupError):
 
 class SelectorError(ValueError):
     """
-    Raise when attempting to create an invalid selector or filter
+    Raised when attempting to create an invalid selector or filter
     """
 
     pass

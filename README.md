@@ -163,7 +163,7 @@ uv run pytest -v
 Code coverage (with [missed branch statements](https://pytest-cov.readthedocs.io/en/latest/config.html?highlight=--cov-branch)):
 
 ```sh
-uv run pytest -v --cov=datawalk --cov-branch --cov-report term-missing --cov-fail-under 85
+uv run pytest -v --cov=datawalk --cov-branch --cov-report term-missing --cov-fail-under 99
 ```
 
 # Changelog
