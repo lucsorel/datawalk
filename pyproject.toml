@@ -18,8 +18,8 @@ dev = [
 lint = [
     "pre-commit>=4.3.0",
 ]
-release = [
-    "python-semantic-release>=10.5.2",
+package = [
+    "python-semantic-release>=10.6.1",
 ]
 
 [tool.uv]
