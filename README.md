@@ -55,14 +55,17 @@ class Pet:
         self.name = name
         self.type = type
 
+
 @dataclass
 class PetDataclass:
     name: str
     type: str
 
+
 class PetNamedTuple(NamedTuple):
     name: str
     type: str
+
 
 data = {
     'name': 'Lucie Nation',
@@ -146,7 +149,7 @@ Walk / 'friends' @ ('name', 'Suzie Q') / 'phone_number' | data
 Walk / 'pets' @ ('name', 'Vanilla') / 'name' | data
 # WalkError: walked [.pets] but could not find @(name==Vanilla) in (Pet(name=Cinnamon, type=cat), PetDataclass(name='Caramel', type='dog'), Pet(name=Melody, type=bird), PetNamedTuple(name='Socks', type='cat'))",
 
-Walk / 'pets' % ('type', 'cat') # should have been % ('type', ['cat'])
+Walk / 'pets' % ('type', 'cat')  # should have been % ('type', ['cat'])
 # SelectorError: unsupported filter: ('type', 'cat'), value cat must be a sequence
 ```
 
